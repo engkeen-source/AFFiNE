@@ -88,3 +88,6 @@ af.cmd
 
 # playwright
 storageState.json
+
+# integration examples
+integration-examples/.env

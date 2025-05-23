@@ -1,0 +1,24 @@
+{
+  "name": "supabase-affine-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server to integrate Supabase Auth with AFFiNE",
+  "main": "supabase-auth-proxy.js",
+  "scripts": {
+    "start": "node supabase-auth-proxy.js",
+    "dev": "nodemon supabase-auth-proxy.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.8",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "http-proxy-middleware": "^2.0.9"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
