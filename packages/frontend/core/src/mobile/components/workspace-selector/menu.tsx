@@ -123,7 +123,7 @@ const WorkspaceServerInfo = ({
             {t['com.affine.server.delete']()}
           </MenuItem>
         ),
-        accountStatus === 'authenticated' && (
+        accountStatus === 'authenticated' && server !== 'affine-cloud' && (
           <MenuItem
             prefixIcon={<SignOutIcon />}
             key="sign-out"
@@ -142,7 +142,12 @@ const WorkspaceServerInfo = ({
       <div className={styles.serverName}>{name}</div>
       {isCloud ? (
         <div className={styles.serverAccount}>
-          - {account ? account.email : 'Not signed in'}
+          -{' '}
+          {server === 'affine-cloud'
+            ? 'Connected via Supabase'
+            : account
+              ? account.email
+              : 'Not signed in'}
         </div>
       ) : null}
       <div className={styles.spaceX} />
@@ -247,7 +252,7 @@ const CloudWorkSpaceList = ({
         onDeleteServer={handleDeleteServer}
         onSignOut={handleSignOut}
       />
-      {accountStatus === 'unauthenticated' ? (
+      {accountStatus === 'unauthenticated' && server.id !== 'affine-cloud' ? (
         <CloudSignIn onClick={handleSignIn} />
       ) : (
         <WorkspaceList
@@ -282,6 +287,12 @@ export const SelectorMenu = ({ onClose }: { onClose?: () => void }) => {
   const workspaces = useLiveData(workspacesService.list.workspaces$);
   const serversService = useService(ServersService);
   const { jumpToPage } = useNavigateHelper();
+  const globalContextService = useService(GlobalContextService);
+
+  // Get current workspace ID from global context
+  const currentWorkspaceId = useLiveData(
+    globalContextService.globalContext.workspaceId.$
+  );
 
   const servers = useLiveData(serversService.servers$);
   const affineCloudServer = useMemo(
@@ -312,12 +323,12 @@ export const SelectorMenu = ({ onClose }: { onClose?: () => void }) => {
   const handleClickWorkspace = useCallback(
     (workspaceMetadata: WorkspaceMetadata) => {
       const id = workspaceMetadata.id;
-      if (id !== currentWorkspace?.id) {
+      if (id !== currentWorkspaceId) {
         jumpToPage(id, 'home');
       }
       onClose?.();
     },
-    [onClose, jumpToPage]
+    [onClose, jumpToPage, currentWorkspaceId]
   );
 
   return (
