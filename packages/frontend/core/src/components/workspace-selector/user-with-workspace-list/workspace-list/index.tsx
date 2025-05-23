@@ -82,7 +82,7 @@ const WorkspaceServerInfo = ({
             {t['com.affine.server.delete']()}
           </MenuItem>
         ),
-        accountStatus === 'authenticated' && (
+        accountStatus === 'authenticated' && server !== 'affine-cloud' && (
           <MenuItem
             prefixIcon={<SignOutIcon />}
             key="sign-out"
@@ -92,7 +92,7 @@ const WorkspaceServerInfo = ({
             {t['Sign out']()}
           </MenuItem>
         ),
-        accountStatus === 'unauthenticated' && (
+        accountStatus === 'unauthenticated' && server !== 'affine-cloud' && (
           <MenuItem
             prefixIcon={<AccountIcon />}
             key="sign-in"
@@ -114,7 +114,11 @@ const WorkspaceServerInfo = ({
         <div className={styles.workspaceServerName}>{name}</div>
         {isCloud ? (
           <div className={styles.workspaceServerAccount}>
-            {account ? account.email : 'Not signed in'}
+            {server === 'affine-cloud'
+              ? 'Connected via Supabase'
+              : account
+                ? account.email
+                : 'Not signed in'}
           </div>
         ) : null}
       </div>

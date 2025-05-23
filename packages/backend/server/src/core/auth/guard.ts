@@ -42,6 +42,40 @@ export class AuthGuard implements CanActivate, OnModuleInit {
     const { req, res } = getRequestResponseFromContext(context);
     const clazz = context.getClass();
     const handler = context.getHandler();
+
+    // Debug logging for request tracing - enhanced to show more details
+    console.log(`[AUTH DEBUG] Request from IP: ${req.ip || 'unknown'}`);
+    console.log(
+      `[AUTH DEBUG] Request path: ${req.method} ${req.originalUrl || req.url}`
+    );
+
+    // Check for Supabase user ID first - ALWAYS prioritize this
+    const supabaseUserIdHeader = req.headers['x-supabase-user-id'];
+    if (supabaseUserIdHeader) {
+      const userId = Array.isArray(supabaseUserIdHeader)
+        ? supabaseUserIdHeader[0]
+        : supabaseUserIdHeader;
+
+      console.log(`[AUTH DEBUG] Found x-supabase-user-id header: ${userId}`);
+
+      // Delete any existing session to ensure we use the correct Supabase user
+      delete req.session;
+
+      // Get the user session based on the Supabase user ID
+      const session = await this.auth.getSessionByUserId(userId);
+      if (session) {
+        req.session = session;
+        console.log(`[AUTH DEBUG] Set session for Supabase user ID: ${userId}`);
+      } else {
+        console.log(
+          `[AUTH DEBUG] No session found for Supabase user ID: ${userId}, creating one`
+        );
+        // Will be created by AuthService.getUserSessionFromRequest
+      }
+    } else {
+      console.log(`[AUTH DEBUG] No x-supabase-user-id header found`);
+    }
+
     // rpc request is internal
     const isInternal = this.reflector.getAllAndOverride<boolean>(
       INTERNAL_ENTRYPOINT_SYMBOL,
@@ -57,6 +91,16 @@ export class AuthGuard implements CanActivate, OnModuleInit {
     }
 
     const userSession = await this.signIn(req, res);
+
+    // Debug logging for user session
+    if (userSession?.user) {
+      console.log(
+        `[AUTH DEBUG] Authenticated user: ${userSession.user.id} (${userSession.user.email})`
+      );
+    } else {
+      console.log(`[AUTH DEBUG] No authenticated user for this request`);
+    }
+
     if (res && userSession && userSession.expiresAt) {
       await this.auth.refreshUserSessionIfNeeded(res, userSession);
     }
@@ -79,11 +123,58 @@ export class AuthGuard implements CanActivate, OnModuleInit {
   }
 
   async signIn(req: Request, res?: Response): Promise<Session | null> {
+    // Debug logging for auth tracing
+    const headerKeys = Object.keys(req.headers).join(', ');
+    console.log(`[AUTH DEBUG] Headers: ${headerKeys}`);
+
+    // If we have a Supabase user ID header, we should always use it
+    const supabaseUserId = req.headers['x-supabase-user-id'];
+    if (supabaseUserId && typeof supabaseUserId === 'string') {
+      console.log(
+        `[AUTH DEBUG] Found x-supabase-user-id header: ${supabaseUserId}`
+      );
+
+      // Clear any existing session to ensure we use the correct Supabase user
+      delete req.session;
+
+      // Get the user session based on the Supabase user ID
+      const userSession = await this.auth.getUserSessionFromRequest(req, res);
+
+      if (userSession) {
+        // Verify that the session user matches the Supabase user ID
+        if (userSession.user.id !== supabaseUserId) {
+          console.log(
+            `[AUTH DEBUG] Session user ID ${userSession.user.id} doesn't match header user ID ${supabaseUserId}`
+          );
+          delete req.session;
+          // Retry with only the Supabase user ID
+          return this.auth.getUserSessionFromRequest(req, res).then(session => {
+            if (session) {
+              req.session = {
+                ...session.session,
+                user: session.user,
+              };
+              return req.session;
+            }
+            return null;
+          });
+        }
+
+        req.session = {
+          ...userSession.session,
+          user: userSession.user,
+        };
+        return req.session;
+      }
+      return null;
+    }
+
+    // Fall back to existing session handling if no Supabase user ID
     if (req.session) {
       return req.session;
     }
 
-    // TODO(@forehalo): a cache for user session
+    // For non-Supabase auth flows
     const userSession = await this.auth.getUserSessionFromRequest(req, res);
 
     if (userSession) {
@@ -91,7 +182,6 @@ export class AuthGuard implements CanActivate, OnModuleInit {
         ...userSession.session,
         user: userSession.user,
       };
-
       return req.session;
     }
 

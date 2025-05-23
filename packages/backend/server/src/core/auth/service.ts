@@ -154,6 +154,27 @@ export class AuthService implements OnApplicationBootstrap {
     return await this.models.session.getSession(sessionId);
   }
 
+  /**
+   * Get a user session by user ID, creating one if it doesn't exist
+   * This is used for Supabase authentication
+   */
+  async getSessionByUserId(userId: string): Promise<UserSession | null> {
+    if (!userId) {
+      return null;
+    }
+
+    // Check if user exists
+    const user = await this.models.user.get(userId);
+    if (!user) {
+      return null; // User doesn't exist yet - will be created in getUserSessionFromRequest
+    }
+
+    // Find all sessions for this user and find the one with this userId
+    const allSessions =
+      await this.models.session.createOrRefreshUserSession(userId);
+    return allSessions;
+  }
+
   async refreshUserSessionIfNeeded(
     res: Response,
     userSession: UserSession,
@@ -181,16 +202,29 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   getSessionOptionsFromRequest(req: Request) {
-    let sessionId: string | undefined =
-      req.cookies[AuthService.sessionCookieName];
-
-    if (!sessionId && req.headers.authorization) {
-      sessionId = extractTokenFromHeader(req.headers.authorization);
+    // Always prefer x-supabase-user-id header for userId if present
+    const supabaseUserIdHeader = req.headers['x-supabase-user-id'];
+    let userId: string | undefined = undefined;
+    if (typeof supabaseUserIdHeader === 'string') {
+      userId = supabaseUserIdHeader;
+    } else if (Array.isArray(supabaseUserIdHeader)) {
+      userId = supabaseUserIdHeader[0];
     }
 
-    const userId: string | undefined =
-      req.cookies[AuthService.userCookieName] ||
-      req.headers[AuthService.userCookieName.replaceAll('_', '-')];
+    // If not present, fallback to old cookie logic (for admin/dev only)
+    if (!userId) {
+      userId =
+        req.cookies[AuthService.userCookieName] ||
+        req.headers[AuthService.userCookieName.replaceAll('_', '-')];
+    }
+
+    // SessionId is not needed in new mode, but keep for compatibility
+    let sessionId: string | undefined = undefined;
+    if (req.cookies[AuthService.sessionCookieName]) {
+      sessionId = req.cookies[AuthService.sessionCookieName];
+    } else if (req.headers.authorization) {
+      sessionId = extractTokenFromHeader(req.headers.authorization);
+    }
 
     return {
       sessionId,
@@ -241,27 +275,35 @@ export class AuthService implements OnApplicationBootstrap {
   }
 
   async getUserSessionFromRequest(req: Request, res?: Response) {
-    const { sessionId, userId } = this.getSessionOptionsFromRequest(req);
-
-    if (!sessionId) {
+    const { userId } = this.getSessionOptionsFromRequest(req);
+    if (!userId) {
       return null;
     }
 
-    const session = await this.getUserSession(sessionId, userId);
-
-    if (res) {
-      if (session) {
-        // set user id cookie for fast authentication
-        if (!userId || userId !== session.user.id) {
-          this.setUserCookie(res, session.user.id);
-        }
-      } else if (sessionId) {
-        // clear invalid cookies.session and cookies.userId
-        this.clearCookies(res);
-      }
+    // Check if user exists, if not create them
+    let user = await this.models.user.get(userId);
+    if (!user) {
+      // Auto-create user for Supabase auth
+      user = await this.models.user.create({
+        id: userId,
+        email: `${userId}@supabase.local`,
+        name: `User ${userId.slice(0, 8)}`,
+        emailVerifiedAt: new Date(),
+      });
+      // Auto-create a personal workspace for this user
+      const workspace = await this.models.workspace.create(userId);
+      // Add user as owner of the workspace
+      await this.models.workspaceUser.setOwner(workspace.id, userId);
     }
 
-    return session;
+    // Always create or fetch a session for this userId
+    const userSession = await this.createUserSession(userId);
+
+    if (res) {
+      this.setUserCookie(res, userId);
+    }
+
+    return { user: sessionUser(user), session: userSession };
   }
 
   async changePassword(

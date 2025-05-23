@@ -293,13 +293,33 @@ export class WorkspaceUserModel extends BaseModel {
     userId: string,
     filter: { role?: WorkspaceRole } = {}
   ) {
-    return await this.db.workspaceUserRole.findMany({
+    console.log(
+      `[DEBUG WORKSPACE-USER] Getting active roles for user: ${userId}`
+    );
+    console.log(`[DEBUG WORKSPACE-USER] Filter: ${JSON.stringify(filter)}`);
+
+    const roles = await this.db.workspaceUserRole.findMany({
       where: {
         userId,
         status: WorkspaceMemberStatus.Accepted,
         type: filter.role,
       },
     });
+
+    console.log(
+      `[DEBUG WORKSPACE-USER] Found ${roles.length} active roles for user: ${userId}`
+    );
+    if (roles.length > 0) {
+      console.log(
+        `[DEBUG WORKSPACE-USER] Role workspaces: ${roles.map(r => r.workspaceId).join(', ')}`
+      );
+    } else {
+      console.log(
+        `[DEBUG WORKSPACE-USER] No active roles found for user: ${userId}`
+      );
+    }
+
+    return roles;
   }
 
   async paginate(workspaceId: string, pagination: PaginationInput) {

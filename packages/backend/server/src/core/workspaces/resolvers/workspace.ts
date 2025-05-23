@@ -195,21 +195,63 @@ export class WorkspaceResolver {
     complexity: 2,
   })
   async workspaces(@CurrentUser() user: CurrentUser) {
+    console.log(`[DEBUG WORKSPACE] Getting workspaces for user: ${user.id}`);
+
+    // Get the user's current workspaces through roles
     const roles = await this.models.workspaceUser.getUserActiveRoles(user.id);
+    console.log(
+      `[DEBUG WORKSPACE] Found ${roles.length} roles for user: ${user.id}`
+    );
+
+    // If no roles found, automatically create a workspace for this user
+    if (roles.length === 0) {
+      console.log(
+        `[DEBUG WORKSPACE] No workspaces found, creating one for user: ${user.id}`
+      );
+      const workspace = await this.models.workspace.create(user.id);
+      console.log(
+        `[DEBUG WORKSPACE] Created workspace ${workspace.id} for user: ${user.id}`
+      );
+
+      // Return the newly created workspace
+      return [
+        {
+          ...workspace,
+          permission: WorkspaceRole.Owner,
+          role: WorkspaceRole.Owner,
+        },
+      ];
+    }
 
     const map = new Map(
       roles.map(({ workspaceId, type }) => [workspaceId, type])
     );
+    console.log(
+      `[DEBUG WORKSPACE] Role workspace IDs: ${Array.from(map.keys()).join(', ')}`
+    );
 
+    // Only get workspaces where this user is an owner or has access
     const workspaces = await this.models.workspace.findMany(
       roles.map(({ workspaceId }) => workspaceId)
     );
+    console.log(
+      `[DEBUG WORKSPACE] Found ${workspaces.length} workspaces for user: ${user.id}`
+    );
 
-    return workspaces.map(workspace => ({
+    if (workspaces.length > 0) {
+      console.log(
+        `[DEBUG WORKSPACE] Workspace IDs: ${workspaces.map(w => w.id).join(', ')}`
+      );
+    }
+
+    // Return only workspaces this user has access to
+    const result = workspaces.map(workspace => ({
       ...workspace,
       permission: map.get(workspace.id),
       role: map.get(workspace.id),
     }));
+
+    return result;
   }
 
   @Query(() => WorkspaceType, {
@@ -260,7 +302,13 @@ export class WorkspaceResolver {
     @Args({ name: 'init', type: () => GraphQLUpload, nullable: true })
     init: FileUpload | null
   ) {
+    console.log(`[DEBUG CREATE] Creating workspace for user: ${user.id}`);
+
+    // Create a workspace and explicitly set this user as owner
     const workspace = await this.models.workspace.create(user.id);
+    console.log(
+      `[DEBUG CREATE] Created workspace ${workspace.id} for user: ${user.id}`
+    );
 
     if (init) {
       // convert stream to buffer
