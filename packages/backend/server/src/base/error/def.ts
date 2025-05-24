@@ -350,6 +350,11 @@ export const USER_FRIENDLY_ERRORS = {
     message:
       'The third-party account has already been connected to another user.',
   },
+  invalid_oauth_response: {
+    type: 'bad_request',
+    args: { reason: 'string' },
+    message: ({ reason }) => `Invalid OAuth response: ${reason}.`,
+  },
   invalid_email: {
     type: 'invalid_input',
     args: { email: 'string' },
@@ -792,9 +797,16 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'action_forbidden',
     message: 'Cannot delete all admin accounts.',
   },
+
+  // Account errors
   cannot_delete_own_account: {
     type: 'action_forbidden',
     message: 'Cannot delete own account.',
+  },
+  cannot_delete_account_with_owned_team_workspace: {
+    type: 'action_forbidden',
+    message:
+      'Cannot delete account. You are the owner of one or more team workspaces. Please transfer ownership or delete them first.',
   },
 
   // captcha errors

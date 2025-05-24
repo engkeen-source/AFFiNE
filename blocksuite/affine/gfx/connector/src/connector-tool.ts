@@ -223,13 +223,15 @@ export class ConnectorTool extends BaseTool<ConnectorToolOptions> {
   }
 
   getNextMode() {
-    switch (this.activatedOption.mode) {
-      case ConnectorMode.Curve:
-        return ConnectorMode.Orthogonal;
-      case ConnectorMode.Orthogonal:
-        return ConnectorMode.Straight;
-      case ConnectorMode.Straight:
-        return ConnectorMode.Curve;
-    }
+    // reorder the enum values
+    const modes = [
+      ConnectorMode.Curve,
+      ConnectorMode.Orthogonal,
+      ConnectorMode.Straight,
+    ];
+
+    const currentIndex = modes.indexOf(this.activatedOption.mode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    return modes[nextIndex];
   }
 }

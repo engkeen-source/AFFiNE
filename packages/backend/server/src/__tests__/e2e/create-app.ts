@@ -154,12 +154,10 @@ export class TestingApp extends NestApplication {
   }
 
   async login(user: MockedUser) {
-    await this.POST('/api/auth/sign-in')
-      .send({
-        email: user.email,
-        password: user.password,
-      })
-      .expect(200);
+    return await this.POST('/api/auth/sign-in').send({
+      email: user.email,
+      password: user.password,
+    });
   }
 
   async switchUser(userOrId: string | { id: string }) {

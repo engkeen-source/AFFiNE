@@ -4,9 +4,11 @@ import { type ConnectedAccount, Prisma, type User } from '@prisma/client';
 import { omit } from 'lodash-es';
 
 import {
+  CannotDeleteAccountWithOwnedTeamWorkspace,
   CryptoHelper,
   EmailAlreadyUsed,
   EventBus,
+  UserNotFound,
   WrongSignInCredentials,
   WrongSignInMethod,
 } from '../base';
@@ -217,6 +219,10 @@ export class UserModel extends BaseModel {
         ...data,
       });
     } else {
+      if (user.disabled) {
+        throw new UserNotFound();
+      }
+
       if (user.registered) {
         delete data.registered;
       } else {
@@ -237,13 +243,25 @@ export class UserModel extends BaseModel {
     return user;
   }
 
+  async ownedWorkspaces(id: string) {
+    return await this.models.workspaceUser.getUserActiveRoles(id, {
+      role: WorkspaceRole.Owner,
+    });
+  }
+
   async delete(id: string) {
-    const ownedWorkspaces = await this.models.workspaceUser.getUserActiveRoles(
-      id,
-      {
-        role: WorkspaceRole.Owner,
+    const ownedWorkspaces = await this.ownedWorkspaces(id);
+
+    for (const ws of ownedWorkspaces) {
+      const isTeamWorkspace = await this.models.workspace.isTeamWorkspace(
+        ws.workspaceId
+      );
+
+      if (isTeamWorkspace) {
+        throw new CannotDeleteAccountWithOwnedTeamWorkspace();
       }
-    );
+    }
+
     const user = await this.db.user.delete({ where: { id } });
 
     this.event.emit('user.deleted', {

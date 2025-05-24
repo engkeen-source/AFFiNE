@@ -11,6 +11,7 @@ import {
   addBasicRectShapeElement,
   click,
   clickInCenter,
+  clickView,
   dragBetweenCoords,
   enterPlaygroundRoom,
   getBoundingRect,
@@ -18,6 +19,7 @@ import {
   initThreeParagraphs,
   pressEnter,
   pressEscape,
+  undoByKeyboard,
   waitNextFrame,
 } from '../../utils/actions/index.js';
 import {
@@ -516,4 +518,28 @@ test('should the selected rect be below the edgeless element toolbar', async ({
   }, brHandleCenter);
 
   expect(topElement).toBe('EDGELESS-TOOLBAR-WIDGET');
+});
+
+test('should the block selectable after undo drag a block from canvas to note', async ({
+  page,
+}) => {
+  await enterPlaygroundRoom(page);
+  await initEmptyEdgelessState(page);
+  await switchEditorMode(page);
+
+  await actions.createNote(page, [0, 200], 'hello\nworld');
+  await pressEscape(page, 3);
+  await clickView(page, [0, 200]);
+  const toolbar = actions.locatorComponentToolbar(page);
+  await toolbar.getByLabel('More menu').click();
+  await toolbar.getByTestId('turn-into-linked-doc').click();
+
+  await page.dragAndDrop(
+    '.affine-drag-handle-grabber.dots',
+    'affine-edgeless-note[data-block-id="2"]'
+  );
+  await waitNextFrame(page);
+  await undoByKeyboard(page);
+  await page.locator('affine-embed-edgeless-synced-doc-block').click();
+  expect(await actions.getSelectedBoundCount(page)).toBe(1);
 });

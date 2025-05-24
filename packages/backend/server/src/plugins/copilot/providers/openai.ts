@@ -27,15 +27,9 @@ import type {
   CopilotImageOptions,
   CopilotStructuredOptions,
   ModelConditions,
-  ModelFullConditions,
   PromptMessage,
 } from './types';
-import {
-  ChatMessageRole,
-  CopilotProviderType,
-  ModelInputType,
-  ModelOutputType,
-} from './types';
+import { CopilotProviderType, ModelInputType, ModelOutputType } from './types';
 import { chatToGPTMessage, CitationParser } from './utils';
 
 export const DEFAULT_DIMENSIONS = 256;
@@ -209,53 +203,6 @@ export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
     });
   }
 
-  protected async checkParams({
-    cond,
-    messages,
-    embeddings,
-  }: {
-    cond: ModelFullConditions;
-    messages?: PromptMessage[];
-    embeddings?: string[];
-    options?: CopilotChatOptions;
-  }) {
-    if (!(await this.match(cond))) {
-      throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
-    }
-    if (Array.isArray(messages) && messages.length > 0) {
-      if (
-        messages.some(
-          m =>
-            // check non-object
-            typeof m !== 'object' ||
-            !m ||
-            // check content
-            typeof m.content !== 'string' ||
-            // content and attachments must exist at least one
-            ((!m.content || !m.content.trim()) &&
-              (!Array.isArray(m.attachments) || !m.attachments.length))
-        )
-      ) {
-        throw new CopilotPromptInvalid('Empty message content');
-      }
-      if (
-        messages.some(
-          m =>
-            typeof m.role !== 'string' ||
-            !m.role ||
-            !ChatMessageRole.includes(m.role)
-        )
-      ) {
-        throw new CopilotPromptInvalid('Invalid message role');
-      }
-    } else if (
-      Array.isArray(embeddings) &&
-      embeddings.some(e => typeof e !== 'string' || !e || !e.trim())
-    ) {
-      throw new CopilotPromptInvalid('Invalid embedding');
-    }
-  }
-
   private handleError(
     e: any,
     model: string,
@@ -357,7 +304,7 @@ export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
       ...cond,
       outputType: ModelOutputType.Text,
     };
-    await this.checkParams({ messages, cond: fullCond });
+    await this.checkParams({ messages, cond: fullCond, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -506,7 +453,7 @@ export class OpenAIProvider extends CopilotProvider<OpenAIConfig> {
     options: CopilotImageOptions = {}
   ) {
     const fullCond = { ...cond, outputType: ModelOutputType.Image };
-    await this.checkParams({ messages, cond: fullCond });
+    await this.checkParams({ messages, cond: fullCond, options });
     const model = this.selectModel(fullCond);
 
     metrics.ai

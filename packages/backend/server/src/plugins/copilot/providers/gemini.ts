@@ -1,6 +1,7 @@
 import {
   createGoogleGenerativeAI,
   type GoogleGenerativeAIProvider,
+  type GoogleGenerativeAIProviderOptions,
 } from '@ai-sdk/google';
 import {
   AISDKError,
@@ -21,15 +22,9 @@ import type {
   CopilotChatOptions,
   CopilotImageOptions,
   ModelConditions,
-  ModelFullConditions,
   PromptMessage,
 } from './types';
-import {
-  ChatMessageRole,
-  CopilotProviderType,
-  ModelInputType,
-  ModelOutputType,
-} from './types';
+import { CopilotProviderType, ModelInputType, ModelOutputType } from './types';
 import { chatToGPTMessage } from './utils';
 
 export const DEFAULT_DIMENSIONS = 256;
@@ -59,8 +54,22 @@ export class GeminiProvider extends CopilotProvider<GeminiConfig> {
       ],
     },
     {
+      name: 'Gemini 2.5 Flash',
+      id: 'gemini-2.5-flash-preview-04-17',
+      capabilities: [
+        {
+          input: [
+            ModelInputType.Text,
+            ModelInputType.Image,
+            ModelInputType.Audio,
+          ],
+          output: [ModelOutputType.Text, ModelOutputType.Structured],
+        },
+      ],
+    },
+    {
       name: 'Gemini 2.5 Pro',
-      id: 'gemini-2.5-pro-preview-03-25',
+      id: 'gemini-2.5-pro-preview-05-06',
       capabilities: [
         {
           input: [
@@ -84,6 +93,10 @@ export class GeminiProvider extends CopilotProvider<GeminiConfig> {
     },
   ];
 
+  private readonly MAX_STEPS = 20;
+
+  private readonly CALLOUT_PREFIX = '\n> [!]\n> ';
+
   #instance!: GoogleGenerativeAIProvider;
 
   override configured(): boolean {
@@ -96,53 +109,6 @@ export class GeminiProvider extends CopilotProvider<GeminiConfig> {
       apiKey: this.config.apiKey,
       baseURL: this.config.baseUrl,
     });
-  }
-
-  protected async checkParams({
-    cond,
-    messages,
-    embeddings,
-  }: {
-    cond: ModelFullConditions;
-    messages?: PromptMessage[];
-    embeddings?: string[];
-    options?: CopilotChatOptions;
-  }) {
-    if (!(await this.match(cond))) {
-      throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
-    }
-    if (Array.isArray(messages) && messages.length > 0) {
-      if (
-        messages.some(
-          m =>
-            // check non-object
-            typeof m !== 'object' ||
-            !m ||
-            // check content
-            typeof m.content !== 'string' ||
-            // content and attachments must exist at least one
-            ((!m.content || !m.content.trim()) &&
-              (!Array.isArray(m.attachments) || !m.attachments.length))
-        )
-      ) {
-        throw new CopilotPromptInvalid('Empty message content');
-      }
-      if (
-        messages.some(
-          m =>
-            typeof m.role !== 'string' ||
-            !m.role ||
-            !ChatMessageRole.includes(m.role)
-        )
-      ) {
-        throw new CopilotPromptInvalid('Invalid message role');
-      }
-    } else if (
-      Array.isArray(embeddings) &&
-      embeddings.some(e => typeof e !== 'string' || !e || !e.trim())
-    ) {
-      throw new CopilotPromptInvalid('Invalid embedding');
-    }
   }
 
   private handleError(e: any) {
@@ -200,7 +166,7 @@ export class GeminiProvider extends CopilotProvider<GeminiConfig> {
     options: CopilotChatOptions = {}
   ): Promise<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Structured };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -249,32 +215,90 @@ export class GeminiProvider extends CopilotProvider<GeminiConfig> {
     options: CopilotChatOptions | CopilotImageOptions = {}
   ): AsyncIterable<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Text };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
       metrics.ai.counter('chat_text_stream_calls').add(1, { model: model.id });
       const [system, msgs] = await chatToGPTMessage(messages);
 
-      const { textStream } = streamText({
-        model: this.#instance(model.id),
+      const { fullStream } = streamText({
+        model: this.#instance(model.id, {
+          useSearchGrounding: this.useSearchGrounding(options),
+        }),
         system,
         messages: msgs,
         abortSignal: options.signal,
+        maxSteps: this.MAX_STEPS,
+        providerOptions: {
+          google: this.getGeminiOptions(options, model.id),
+        },
       });
 
-      for await (const message of textStream) {
-        if (message) {
-          yield message;
+      let lastType;
+      // reasoning, tool-call, tool-result need to mark as callout
+      let prefix: string | null = this.CALLOUT_PREFIX;
+      for await (const chunk of fullStream) {
+        if (chunk) {
+          switch (chunk.type) {
+            case 'text-delta': {
+              let result = chunk.textDelta;
+              if (lastType !== chunk.type) {
+                result = '\n\n' + result;
+              }
+              yield result;
+              break;
+            }
+            case 'reasoning': {
+              if (prefix) {
+                yield prefix;
+                prefix = null;
+              }
+              let result = chunk.textDelta;
+              if (lastType !== chunk.type) {
+                result = '\n\n' + result;
+              }
+              yield this.markAsCallout(result);
+              break;
+            }
+            case 'error': {
+              const error = chunk.error as { type: string; message: string };
+              throw new Error(error.message);
+            }
+          }
           if (options.signal?.aborted) {
-            await textStream.cancel();
+            await fullStream.cancel();
             break;
           }
+          lastType = chunk.type;
         }
       }
     } catch (e: any) {
       metrics.ai.counter('chat_text_stream_errors').add(1, { model: model.id });
       throw this.handleError(e);
     }
+  }
+
+  private getGeminiOptions(options: CopilotChatOptions, model: string) {
+    const result: GoogleGenerativeAIProviderOptions = {};
+    if (options?.reasoning && this.isReasoningModel(model)) {
+      result.thinkingConfig = {
+        thinkingBudget: 12000,
+        includeThoughts: true,
+      };
+    }
+    return result;
+  }
+
+  private markAsCallout(text: string) {
+    return text.replaceAll('\n', '\n> ');
+  }
+
+  private isReasoningModel(model: string) {
+    return model.startsWith('gemini-2.5');
+  }
+
+  private useSearchGrounding(options: CopilotChatOptions) {
+    return options?.tools?.includes('webSearch');
   }
 }

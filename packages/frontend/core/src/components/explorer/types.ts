@@ -21,6 +21,8 @@ export interface ExplorerDisplayPreference {
   quickSplit?: boolean;
   quickTab?: boolean;
   quickSelect?: boolean;
+  quickDeletePermanently?: boolean;
+  quickRestore?: boolean;
 }
 
 export interface DocListPropertyProps {

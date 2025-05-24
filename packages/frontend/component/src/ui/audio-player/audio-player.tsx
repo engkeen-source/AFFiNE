@@ -4,7 +4,6 @@ import {
   RewindFifteenSecondsIcon,
   VoiceIcon,
 } from '@blocksuite/icons/rc';
-import bytes from 'bytes';
 import { clamp } from 'lodash-es';
 import { type MouseEventHandler, type ReactNode, useCallback } from 'react';
 
@@ -24,7 +23,7 @@ const formatTime = (seconds: number): string => {
 export interface AudioPlayerProps {
   // Audio metadata
   name: string;
-  size: number | ReactNode; // the size entry may be used for drawing error message
+  description?: ReactNode; // Display file size or error message
   waveform: number[] | null;
   // Playback state
   playbackState: 'idle' | 'playing' | 'paused' | 'stopped';
@@ -52,7 +51,7 @@ const playbackRates = [0.5, 0.75, 1, 1.5, 1.75, 2, 3];
 
 export const AudioPlayer = ({
   name,
-  size,
+  description,
   playbackState,
   seekTime,
   duration,
@@ -108,9 +107,7 @@ export const AudioPlayer = ({
             <div className={styles.nameLabel}>{name}</div>
           </div>
           <div className={styles.upperRow}>
-            <div className={styles.sizeInfo}>
-              {typeof size === 'number' ? bytes(size) : size}
-            </div>
+            <div className={styles.description}>{description}</div>
           </div>
         </div>
         <div className={styles.upperRight}>

@@ -170,6 +170,16 @@ export class OauthAccountAlreadyConnected extends UserFriendlyError {
   }
 }
 @ObjectType()
+class InvalidOauthResponseDataType {
+  @Field() reason!: string
+}
+
+export class InvalidOauthResponse extends UserFriendlyError {
+  constructor(args: InvalidOauthResponseDataType, message?: string | ((args: InvalidOauthResponseDataType) => string)) {
+    super('bad_request', 'invalid_oauth_response', message, args);
+  }
+}
+@ObjectType()
 class InvalidEmailDataType {
   @Field() email!: string
 }
@@ -908,6 +918,12 @@ export class CannotDeleteOwnAccount extends UserFriendlyError {
   }
 }
 
+export class CannotDeleteAccountWithOwnedTeamWorkspace extends UserFriendlyError {
+  constructor(message?: string) {
+    super('action_forbidden', 'cannot_delete_account_with_owned_team_workspace', message);
+  }
+}
+
 export class CaptchaVerificationFailed extends UserFriendlyError {
   constructor(message?: string) {
     super('bad_request', 'captcha_verification_failed', message);
@@ -1052,6 +1068,7 @@ export enum ErrorNames {
   INVALID_AUTH_STATE,
   MISSING_OAUTH_QUERY_PARAMETER,
   OAUTH_ACCOUNT_ALREADY_CONNECTED,
+  INVALID_OAUTH_RESPONSE,
   INVALID_EMAIL,
   INVALID_PASSWORD_LENGTH,
   PASSWORD_REQUIRED,
@@ -1145,6 +1162,7 @@ export enum ErrorNames {
   MAILER_SERVICE_IS_NOT_CONFIGURED,
   CANNOT_DELETE_ALL_ADMIN_ACCOUNT,
   CANNOT_DELETE_OWN_ACCOUNT,
+  CANNOT_DELETE_ACCOUNT_WITH_OWNED_TEAM_WORKSPACE,
   CAPTCHA_VERIFICATION_FAILED,
   INVALID_LICENSE_SESSION_ID,
   LICENSE_REVEALED,
@@ -1169,5 +1187,5 @@ registerEnumType(ErrorNames, {
 export const ErrorDataUnionType = createUnionType({
   name: 'ErrorDataUnion',
   types: () =>
-    [GraphqlBadRequestDataType, HttpRequestErrorDataType, QueryTooLongDataType, ValidationErrorDataType, WrongSignInCredentialsDataType, UnknownOauthProviderDataType, InvalidOauthCallbackCodeDataType, MissingOauthQueryParameterDataType, InvalidEmailDataType, InvalidPasswordLengthDataType, WorkspacePermissionNotFoundDataType, SpaceNotFoundDataType, MemberNotFoundInSpaceDataType, NotInSpaceDataType, AlreadyInSpaceDataType, SpaceAccessDeniedDataType, SpaceOwnerNotFoundDataType, SpaceShouldHaveOnlyOneOwnerDataType, DocNotFoundDataType, DocActionDeniedDataType, DocUpdateBlockedDataType, VersionRejectedDataType, InvalidHistoryTimestampDataType, DocHistoryNotFoundDataType, BlobNotFoundDataType, ExpectToGrantDocUserRolesDataType, ExpectToRevokeDocUserRolesDataType, ExpectToUpdateDocUserRoleDataType, NoMoreSeatDataType, UnsupportedSubscriptionPlanDataType, SubscriptionAlreadyExistsDataType, SubscriptionNotExistsDataType, SameSubscriptionRecurringDataType, SubscriptionPlanNotFoundDataType, CopilotDocNotFoundDataType, CopilotMessageNotFoundDataType, CopilotPromptNotFoundDataType, CopilotProviderNotSupportedDataType, CopilotProviderSideErrorDataType, CopilotInvalidContextDataType, CopilotContextFileNotSupportedDataType, CopilotFailedToModifyContextDataType, CopilotFailedToMatchContextDataType, CopilotFailedToMatchGlobalContextDataType, CopilotFailedToAddWorkspaceFileEmbeddingDataType, RuntimeConfigNotFoundDataType, InvalidRuntimeConfigTypeDataType, InvalidLicenseToActivateDataType, InvalidLicenseUpdateParamsDataType, UnsupportedClientVersionDataType, MentionUserDocAccessDeniedDataType, InvalidSearchProviderRequestDataType, InvalidIndexerInputDataType] as const,
+    [GraphqlBadRequestDataType, HttpRequestErrorDataType, QueryTooLongDataType, ValidationErrorDataType, WrongSignInCredentialsDataType, UnknownOauthProviderDataType, InvalidOauthCallbackCodeDataType, MissingOauthQueryParameterDataType, InvalidOauthResponseDataType, InvalidEmailDataType, InvalidPasswordLengthDataType, WorkspacePermissionNotFoundDataType, SpaceNotFoundDataType, MemberNotFoundInSpaceDataType, NotInSpaceDataType, AlreadyInSpaceDataType, SpaceAccessDeniedDataType, SpaceOwnerNotFoundDataType, SpaceShouldHaveOnlyOneOwnerDataType, DocNotFoundDataType, DocActionDeniedDataType, DocUpdateBlockedDataType, VersionRejectedDataType, InvalidHistoryTimestampDataType, DocHistoryNotFoundDataType, BlobNotFoundDataType, ExpectToGrantDocUserRolesDataType, ExpectToRevokeDocUserRolesDataType, ExpectToUpdateDocUserRoleDataType, NoMoreSeatDataType, UnsupportedSubscriptionPlanDataType, SubscriptionAlreadyExistsDataType, SubscriptionNotExistsDataType, SameSubscriptionRecurringDataType, SubscriptionPlanNotFoundDataType, CopilotDocNotFoundDataType, CopilotMessageNotFoundDataType, CopilotPromptNotFoundDataType, CopilotProviderNotSupportedDataType, CopilotProviderSideErrorDataType, CopilotInvalidContextDataType, CopilotContextFileNotSupportedDataType, CopilotFailedToModifyContextDataType, CopilotFailedToMatchContextDataType, CopilotFailedToMatchGlobalContextDataType, CopilotFailedToAddWorkspaceFileEmbeddingDataType, RuntimeConfigNotFoundDataType, InvalidRuntimeConfigTypeDataType, InvalidLicenseToActivateDataType, InvalidLicenseUpdateParamsDataType, UnsupportedClientVersionDataType, MentionUserDocAccessDeniedDataType, InvalidSearchProviderRequestDataType, InvalidIndexerInputDataType] as const,
 });

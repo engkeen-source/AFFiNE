@@ -40,6 +40,10 @@ export class IndexerJob {
 
   @OnJob('indexer.indexDoc')
   async indexDoc({ workspaceId, docId }: Jobs['indexer.indexDoc']) {
+    if (!this.config.indexer.enabled) {
+      return;
+    }
+
     // delete the 'indexer.deleteDoc' job from the queue
     await this.queue.remove(
       `deleteDoc/${workspaceId}/${docId}`,
@@ -50,6 +54,10 @@ export class IndexerJob {
 
   @OnJob('indexer.deleteDoc')
   async deleteDoc({ workspaceId, docId }: Jobs['indexer.deleteDoc']) {
+    if (!this.config.indexer.enabled) {
+      return;
+    }
+
     // delete the 'indexer.updateDoc' job from the queue
     await this.queue.remove(
       `indexDoc/${workspaceId}/${docId}`,
@@ -60,6 +68,10 @@ export class IndexerJob {
 
   @OnJob('indexer.indexWorkspace')
   async indexWorkspace({ workspaceId }: Jobs['indexer.indexWorkspace']) {
+    if (!this.config.indexer.enabled) {
+      return;
+    }
+
     await this.queue.remove(workspaceId, 'indexer.deleteWorkspace');
     const workspace = await this.models.workspace.get(workspaceId);
     if (!workspace) {
@@ -127,6 +139,10 @@ export class IndexerJob {
 
   @OnJob('indexer.deleteWorkspace')
   async deleteWorkspace({ workspaceId }: Jobs['indexer.deleteWorkspace']) {
+    if (!this.config.indexer.enabled) {
+      return;
+    }
+
     await this.queue.remove(
       `indexWorkspace/${workspaceId}`,
       'indexer.indexWorkspace'
@@ -136,6 +152,10 @@ export class IndexerJob {
 
   @OnJob('indexer.autoIndexWorkspaces')
   async autoIndexWorkspaces(payload: Jobs['indexer.autoIndexWorkspaces']) {
+    if (!this.config.indexer.enabled) {
+      return;
+    }
+
     const startSid = payload.lastIndexedWorkspaceSid ?? 0;
     const workspaces = await this.models.workspace.listAfterSid(
       startSid,

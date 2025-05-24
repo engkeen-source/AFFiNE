@@ -19,4 +19,3 @@ export * from './use-all-doc-display-properties';
 export * from './utils';
 export * from './view';
 export * from './virtualized-list';
-export * from './virtualized-trash-list';

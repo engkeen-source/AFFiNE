@@ -18,6 +18,7 @@ import { TrashPageFooter } from '@affine/core/components/pure/trash-page-footer'
 import { TopTip } from '@affine/core/components/top-tip';
 import { DocService } from '@affine/core/modules/doc';
 import { EditorService } from '@affine/core/modules/editor';
+import { FeatureFlagService } from '@affine/core/modules/feature-flag';
 import { GlobalContextService } from '@affine/core/modules/global-context';
 import { PeekViewService } from '@affine/core/modules/peek-view';
 import { RecentDocsService } from '@affine/core/modules/quicksearch';
@@ -36,6 +37,7 @@ import { DisposableGroup } from '@blocksuite/affine/global/disposable';
 import { RefNodeSlotsProvider } from '@blocksuite/affine/inlines/reference';
 import {
   AiIcon,
+  ExportIcon,
   FrameIcon,
   PropertyIcon,
   TocIcon,
@@ -57,6 +59,7 @@ import { PageNotFound } from '../../404';
 import * as styles from './detail-page.css';
 import { DetailPageHeader } from './detail-page-header';
 import { DetailPageWrapper } from './detail-page-wrapper';
+import { EditorAdapterPanel } from './tabs/adapter';
 import { EditorChatPanel } from './tabs/chat';
 import { EditorFramePanel } from './tabs/frame';
 import { EditorJournalPanel } from './tabs/journal';
@@ -102,6 +105,11 @@ const DetailPageImpl = memo(function DetailPageImpl() {
   const [_, setActiveBlockSuiteEditor] = useActiveBlocksuiteEditor();
 
   const enableAI = useEnableAI();
+
+  const featureFlagService = useService(FeatureFlagService);
+  const enableAdapterPanel = useLiveData(
+    featureFlagService.flags.enable_adapter_panel.$
+  );
 
   useEffect(() => {
     if (isActiveView) {
@@ -359,6 +367,16 @@ const DetailPageImpl = memo(function DetailPageImpl() {
           <Scrollable.Scrollbar />
         </Scrollable.Root>
       </ViewSidebarTab>
+
+      {enableAdapterPanel && (
+        <ViewSidebarTab tabId="adapter" icon={<ExportIcon />}>
+          <Scrollable.Root className={styles.sidebarScrollArea}>
+            <Scrollable.Viewport>
+              <EditorAdapterPanel host={editorContainer?.host ?? null} />
+            </Scrollable.Viewport>
+          </Scrollable.Root>
+        </ViewSidebarTab>
+      )}
 
       <GlobalPageHistoryModal />
       {/* FIXME: wait for better ai, <PageAIOnboarding /> */}

@@ -10,6 +10,7 @@ import {
   InternalServerError,
   InvalidCheckoutParameters,
   Mutex,
+  OnEvent,
   SubscriptionAlreadyExists,
   SubscriptionPlanNotFound,
   TooManyRequest,
@@ -681,6 +682,19 @@ export class UserSubscriptionManager extends SubscriptionManager {
   ): asserts userId is string {
     if (!userId) {
       throw new Error('user should exists for stripe subscription or invoice.');
+    }
+  }
+
+  @OnEvent('user.deleted')
+  async onUserDeleted({ id }: Events['user.deleted']) {
+    const subscription = await this.db.subscription.findFirst({
+      where: {
+        targetId: id,
+      },
+    });
+
+    if (subscription?.stripeSubscriptionId) {
+      await this.stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
     }
   }
 }

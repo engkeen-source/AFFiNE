@@ -6,7 +6,6 @@ import {
 import { AISDKError, generateText, streamText } from 'ai';
 
 import {
-  CopilotPromptInvalid,
   CopilotProviderSideError,
   metrics,
   UserFriendlyError,
@@ -16,15 +15,9 @@ import { CopilotProvider } from './provider';
 import type {
   CopilotChatOptions,
   ModelConditions,
-  ModelFullConditions,
   PromptMessage,
 } from './types';
-import {
-  ChatMessageRole,
-  CopilotProviderType,
-  ModelInputType,
-  ModelOutputType,
-} from './types';
+import { CopilotProviderType, ModelInputType, ModelOutputType } from './types';
 import { chatToGPTMessage } from './utils';
 
 export type AnthropicConfig = {
@@ -74,47 +67,6 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
     });
   }
 
-  protected async checkParams({
-    cond,
-    messages,
-  }: {
-    cond: ModelFullConditions;
-    messages?: PromptMessage[];
-    embeddings?: string[];
-    options?: CopilotChatOptions;
-  }) {
-    if (!(await this.match(cond))) {
-      throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
-    }
-    if (Array.isArray(messages) && messages.length > 0) {
-      if (
-        messages.some(
-          m =>
-            // check non-object
-            typeof m !== 'object' ||
-            !m ||
-            // check content
-            typeof m.content !== 'string' ||
-            // content and attachments must exist at least one
-            ((!m.content || !m.content.trim()) &&
-              (!Array.isArray(m.attachments) || !m.attachments.length))
-        )
-      ) {
-        throw new CopilotPromptInvalid('Empty message content');
-      }
-      if (
-        messages.some(
-          m =>
-            typeof m.role !== 'string' ||
-            !m.role ||
-            !ChatMessageRole.includes(m.role)
-        )
-      ) {
-        throw new CopilotPromptInvalid('Invalid message role');
-      }
-    }
-  }
-
   private handleError(e: any) {
     if (e instanceof UserFriendlyError) {
       return e;
@@ -140,7 +92,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
     options: CopilotChatOptions = {}
   ): Promise<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Text };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -177,7 +129,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
     options: CopilotChatOptions = {}
   ): AsyncIterable<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Text };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -280,7 +232,7 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
 
   private getAnthropicOptions(options: CopilotChatOptions, model: string) {
     const result: AnthropicProviderOptions = {};
-    if (options?.reasoning && this.isThinkingModel(model)) {
+    if (options?.reasoning && this.isReasoningModel(model)) {
       result.thinking = {
         type: 'enabled',
         budgetTokens: 12000,
@@ -305,7 +257,8 @@ export class AnthropicProvider extends CopilotProvider<AnthropicConfig> {
     return text.replaceAll('\n', '\n> ');
   }
 
-  private isThinkingModel(model: string) {
+  private isReasoningModel(model: string) {
+    // only claude 3.7 sonnet supports reasoning config
     return model.startsWith('claude-3-7-sonnet');
   }
 }

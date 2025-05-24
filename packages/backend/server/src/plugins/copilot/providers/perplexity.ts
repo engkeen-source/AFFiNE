@@ -5,17 +5,12 @@ import {
 import { generateText, streamText } from 'ai';
 import { z } from 'zod';
 
-import {
-  CopilotPromptInvalid,
-  CopilotProviderSideError,
-  metrics,
-} from '../../../base';
+import { CopilotProviderSideError, metrics } from '../../../base';
 import { CopilotProvider } from './provider';
 import {
   CopilotChatOptions,
   CopilotProviderType,
   ModelConditions,
-  ModelFullConditions,
   ModelInputType,
   ModelOutputType,
   PromptMessage,
@@ -115,7 +110,7 @@ export class PerplexityProvider extends CopilotProvider<PerplexityConfig> {
     options: CopilotChatOptions = {}
   ): Promise<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Text };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -155,7 +150,7 @@ export class PerplexityProvider extends CopilotProvider<PerplexityConfig> {
     options: CopilotChatOptions = {}
   ): AsyncIterable<string> {
     const fullCond = { ...cond, outputType: ModelOutputType.Text };
-    await this.checkParams({ cond: fullCond, messages });
+    await this.checkParams({ cond: fullCond, messages, options });
     const model = this.selectModel(fullCond);
 
     try {
@@ -212,19 +207,6 @@ export class PerplexityProvider extends CopilotProvider<PerplexityConfig> {
     } catch (e) {
       metrics.ai.counter('chat_text_stream_errors').add(1, { model: model.id });
       throw e;
-    }
-  }
-
-  protected async checkParams({
-    cond,
-  }: {
-    cond: ModelFullConditions;
-    messages?: PromptMessage[];
-    embeddings?: string[];
-    options?: CopilotChatOptions;
-  }) {
-    if (!(await this.match(cond))) {
-      throw new CopilotPromptInvalid(`Invalid model: ${cond.modelId}`);
     }
   }
 

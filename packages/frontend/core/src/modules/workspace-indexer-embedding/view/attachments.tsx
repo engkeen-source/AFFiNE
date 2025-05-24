@@ -131,12 +131,18 @@ const AttachmentItem: React.FC<AttachmentItemProps> = ({
         <PersistedItem attachment={attachment} />
       ) : null}
       <div className={attachmentOperation}>
-        <CloseIcon
-          data-testid="workspace-embedding-setting-attachment-delete-button"
-          onClick={handleDelete}
-          color={cssVarV2('icon/primary')}
-          style={{ cursor: 'pointer' }}
-        />
+        <Tooltip
+          content={t[
+            'com.affine.settings.workspace.indexer-embedding.embedding.additional-attachments.remove-attachment.tooltip'
+          ]()}
+        >
+          <CloseIcon
+            data-testid="workspace-embedding-setting-attachment-delete-button"
+            onClick={handleDelete}
+            color={cssVarV2('icon/primary')}
+            style={{ cursor: 'pointer' }}
+          />
+        </Tooltip>
       </div>
     </div>
   );

@@ -125,6 +125,7 @@ jobs:
       - name: Run BS Docs Build
         run: |
           yarn affine bs-docs build
+          git checkout packages/frontend/i18n/src/i18n-completenesses.json
           git status --porcelain | grep . && {
             echo "Run 'yarn typecheck && yarn affine bs-docs build' and make sure all changes are submitted"
             exit 1
@@ -183,6 +184,7 @@ jobs:
           yarn affine gql build
           yarn affine i18n build
           yarn affine server genconfig
+          git checkout packages/frontend/i18n/src/i18n-completenesses.json
           git status --porcelain | grep . && {
             echo "Run 'yarn affine init && yarn affine gql build && yarn affine i18n build && yarn affine server genconfig' and make sure all changes are submitted"
             exit 1
@@ -583,7 +585,7 @@ jobs:
           - 1025:1025
           - 8025:8025
       indexer:
-        image: manticoresearch/manticore:9.2.14
+        image: manticoresearch/manticore:9.3.2
         ports:
           - 9308:9308
     steps:
@@ -733,7 +735,7 @@ jobs:
         ports:
           - 6379:6379
       indexer:
-        image: manticoresearch/manticore:9.2.14
+        image: manticoresearch/manticore:9.3.2
         ports:
           - 9308:9308
     steps:
@@ -957,7 +959,7 @@ jobs:
           - 1025:1025
           - 8025:8025
       indexer:
-        image: manticoresearch/manticore:9.2.14
+        image: manticoresearch/manticore:9.3.2
         ports:
           - 9308:9308
     steps:
@@ -1056,7 +1058,7 @@ jobs:
         ports:
           - 6379:6379
       indexer:
-        image: manticoresearch/manticore:9.2.14
+        image: manticoresearch/manticore:9.3.2
         ports:
           - 9308:9308
     steps:
@@ -1183,7 +1185,7 @@ jobs:
           - 1025:1025
           - 8025:8025
       indexer:
-        image: manticoresearch/manticore:9.2.14
+        image: manticoresearch/manticore:9.3.2
         ports:
           - 9308:9308
     steps:

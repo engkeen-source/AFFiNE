@@ -173,7 +173,8 @@ export class QuotaService {
 
   async getWorkspaceSeatQuota(workspaceId: string) {
     const quota = await this.getWorkspaceQuota(workspaceId);
-    const memberCount = await this.models.workspaceUser.count(workspaceId);
+    const memberCount =
+      await this.models.workspaceUser.chargedCount(workspaceId);
 
     return {
       memberCount,

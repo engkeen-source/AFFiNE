@@ -28,5 +28,24 @@ export const notesButtonIcon = style({
 });
 
 export const error = style({
+  display: 'flex',
   color: cssVarV2('aI/errorText'),
+});
+
+export const reloadButton = style({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '0 4px',
+  gap: '4px',
+  border: 'none',
+  background: 'none',
+  cursor: 'pointer',
+  outline: 'none',
+  color: cssVarV2('button/primary'),
+  fontSize: cssVar('fontSm'),
+  fontWeight: 500,
+});
+
+export const reloadButtonIcon = style({
+  fontSize: 16,
 });

@@ -710,6 +710,7 @@ export class DragEventWatcher {
     dropPayload: DropPayload,
     point: Point
   ) => {
+    this.std.store.captureSync();
     if (this.mode === 'edgeless') {
       this._onEdgelessDrop(dropBlock, dragPayload, dropPayload, point);
     } else {

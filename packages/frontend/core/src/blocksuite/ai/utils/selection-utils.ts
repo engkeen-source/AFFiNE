@@ -29,7 +29,7 @@ import {
 
 import { getContentFromSlice } from '../../utils';
 import type { CopilotTool } from '../tool/copilot-tool';
-import { getEdgelessCopilotWidget } from './edgeless';
+import { getEdgelessCopilotWidget } from './get-edgeless-copilot-widget';
 
 export async function selectedToCanvas(host: EditorHost) {
   const gfx = host.std.get(GfxControllerIdentifier);

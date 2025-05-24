@@ -386,14 +386,18 @@ export class EditorUtils {
     );
   }
 
+  public static async removeAll(page: Page) {
+    await selectAllByKeyboard(page);
+    await page.keyboard.press('Delete');
+  }
+
   public static async askAIWithEdgeless(
     page: Page,
     createBlock: () => Promise<void>,
     afterSelected?: () => Promise<void>
   ) {
     await this.switchToEdgelessMode(page);
-    await selectAllByKeyboard(page);
-    await page.keyboard.press('Delete');
+    await this.removeAll(page);
     await createBlock();
     await pressEscape(page, 5);
     await selectAllByKeyboard(page);

@@ -5891,6 +5891,14 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.settings.workspace.experimental-features.enable-code-block-html-preview.description"](): string;
     /**
+      * `Adapter Panel`
+      */
+    ["com.affine.settings.workspace.experimental-features.enable-adapter-panel.name"](): string;
+    /**
+      * `Once enabled, you can preview adapter export content in the right side bar.`
+      */
+    ["com.affine.settings.workspace.experimental-features.enable-adapter-panel.description"](): string;
+    /**
       * `Only an owner can edit the workspace avatar and name. Changes will be shown for everyone.`
       */
     ["com.affine.settings.workspace.not-owner"](): string;
@@ -6263,6 +6271,10 @@ export function useAFFiNEI18N(): {
       * `Attachment will be removed. AI will not continue to extract content from this attachment.`
       */
     ["com.affine.settings.workspace.indexer-embedding.embedding.additional-attachments.remove-attachment.description"](): string;
+    /**
+      * `Delete File`
+      */
+    ["com.affine.settings.workspace.indexer-embedding.embedding.additional-attachments.remove-attachment.tooltip"](): string;
     /**
       * `Sharing doc requires AFFiNE Cloud.`
       */
@@ -7073,9 +7085,41 @@ export function useAFFiNEI18N(): {
       */
     ["com.affine.all-docs.quick-action.select"](): string;
     /**
+      * `Delete permanently`
+      */
+    ["com.affine.all-docs.quick-action.delete-permanently"](): string;
+    /**
+      * `Restore`
+      */
+    ["com.affine.all-docs.quick-action.restore"](): string;
+    /**
       * `All`
       */
     ["com.affine.all-docs.pinned-collection.all"](): string;
+    /**
+      * `Template`
+      */
+    ["com.affine.all-docs.group.is-template"](): string;
+    /**
+      * `Not Template`
+      */
+    ["com.affine.all-docs.group.is-not-template"](): string;
+    /**
+      * `Journal`
+      */
+    ["com.affine.all-docs.group.is-journal"](): string;
+    /**
+      * `Not Journal`
+      */
+    ["com.affine.all-docs.group.is-not-journal"](): string;
+    /**
+      * `Checked`
+      */
+    ["com.affine.all-docs.group.is-checked"](): string;
+    /**
+      * `Unchecked`
+      */
+    ["com.affine.all-docs.group.is-not-checked"](): string;
     /**
       * `core`
       */
@@ -8147,6 +8191,12 @@ export function useAFFiNEI18N(): {
       */
     ["error.OAUTH_ACCOUNT_ALREADY_CONNECTED"](): string;
     /**
+      * `Invalid OAuth response: {{reason}}.`
+      */
+    ["error.INVALID_OAUTH_RESPONSE"](options: {
+        readonly reason: string;
+    }): string;
+    /**
       * `An invalid email provided: {{email}}`
       */
     ["error.INVALID_EMAIL"](options: {
@@ -8610,6 +8660,10 @@ export function useAFFiNEI18N(): {
       * `Cannot delete own account.`
       */
     ["error.CANNOT_DELETE_OWN_ACCOUNT"](): string;
+    /**
+      * `Cannot delete account. You are the owner of one or more team workspaces. Please transfer ownership or delete them first.`
+      */
+    ["error.CANNOT_DELETE_ACCOUNT_WITH_OWNED_TEAM_WORKSPACE"](): string;
     /**
       * `Captcha verification failed.`
       */

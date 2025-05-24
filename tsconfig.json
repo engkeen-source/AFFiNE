@@ -75,6 +75,7 @@
     { "path": "./blocksuite/affine/data-view" },
     { "path": "./blocksuite/affine/ext-loader" },
     { "path": "./blocksuite/affine/foundation" },
+    { "path": "./blocksuite/affine/fragments/adapter-panel" },
     { "path": "./blocksuite/affine/fragments/doc-title" },
     { "path": "./blocksuite/affine/fragments/frame-panel" },
     { "path": "./blocksuite/affine/fragments/outline" },

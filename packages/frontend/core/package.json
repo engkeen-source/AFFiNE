@@ -49,7 +49,7 @@
     "core-js": "^3.39.0",
     "dayjs": "^1.11.13",
     "eventemitter2": "^6.4.9",
-    "file-type": "^20.0.0",
+    "file-type": "^21.0.0",
     "filesize": "^10.1.6",
     "foxact": "^0.2.43",
     "fuse.js": "^7.0.0",

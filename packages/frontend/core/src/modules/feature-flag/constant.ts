@@ -327,6 +327,15 @@ export const AFFINE_FLAGS = {
     configurable: isCanaryBuild,
     defaultState: true,
   },
+  enable_adapter_panel: {
+    category: 'affine',
+    displayName:
+      'com.affine.settings.workspace.experimental-features.enable-adapter-panel.name',
+    description:
+      'com.affine.settings.workspace.experimental-features.enable-adapter-panel.description',
+    configurable: isCanaryBuild,
+    defaultState: false,
+  },
 } satisfies { [key in string]: FlagInfo };
 
 // oxlint-disable-next-line no-redeclare

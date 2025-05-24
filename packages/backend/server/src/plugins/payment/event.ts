@@ -6,7 +6,7 @@ import { Models } from '../../models';
 import { SubscriptionPlan } from './types';
 
 @Injectable()
-export class QuotaOverride {
+export class PaymentEventHandlers {
   constructor(
     private readonly workspace: WorkspaceService,
     private readonly models: Models,

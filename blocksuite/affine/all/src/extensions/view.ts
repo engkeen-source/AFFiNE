@@ -19,6 +19,7 @@ import { SurfaceViewExtension } from '@blocksuite/affine-block-surface/view';
 import { SurfaceRefViewExtension } from '@blocksuite/affine-block-surface-ref/view';
 import { TableViewExtension } from '@blocksuite/affine-block-table/view';
 import { FoundationViewExtension } from '@blocksuite/affine-foundation/view';
+import { AdapterPanelViewExtension } from '@blocksuite/affine-fragment-adapter-panel/view';
 import { DocTitleViewExtension } from '@blocksuite/affine-fragment-doc-title/view';
 import { FramePanelViewExtension } from '@blocksuite/affine-fragment-frame-panel/view';
 import { OutlineViewExtension } from '@blocksuite/affine-fragment-outline/view';
@@ -124,5 +125,6 @@ export function getInternalViewExtensions() {
     DocTitleViewExtension,
     FramePanelViewExtension,
     OutlineViewExtension,
+    AdapterPanelViewExtension,
   ];
 }

@@ -66,7 +66,6 @@ import {
   DEFAULT_NOTE_TIP,
 } from './utils/consts.js';
 import { deleteElements } from './utils/crud.js';
-import { getNextShapeType } from './utils/hotkey-utils.js';
 import { isCanvasElement } from './utils/query.js';
 
 export class EdgelessPageKeyboardManager extends PageKeyboardManager {
@@ -216,10 +215,8 @@ export class EdgelessPageKeyboardManager extends PageKeyboardManager {
           ) {
             return;
           }
-          const { shapeName } = controller.activatedOption;
-          const nextShapeName = getNextShapeType(shapeName);
           this._setEdgelessTool(ShapeTool, {
-            shapeName: nextShapeName,
+            shapeName: controller.cycleShapeName('prev'),
           });
 
           controller.createOverlay();

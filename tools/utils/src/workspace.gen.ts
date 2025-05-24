@@ -28,6 +28,7 @@ export const PackageList = [
       'blocksuite/affine/components',
       'blocksuite/affine/ext-loader',
       'blocksuite/affine/foundation',
+      'blocksuite/affine/fragments/adapter-panel',
       'blocksuite/affine/fragments/doc-title',
       'blocksuite/affine/fragments/frame-panel',
       'blocksuite/affine/fragments/outline',
@@ -470,6 +471,19 @@ export const PackageList = [
       'blocksuite/affine/rich-text',
       'blocksuite/affine/shared',
       'blocksuite/affine/data-view',
+      'blocksuite/framework/global',
+      'blocksuite/framework/std',
+      'blocksuite/framework/store',
+    ],
+  },
+  {
+    location: 'blocksuite/affine/fragments/adapter-panel',
+    name: '@blocksuite/affine-fragment-adapter-panel',
+    workspaceDependencies: [
+      'blocksuite/affine/components',
+      'blocksuite/affine/ext-loader',
+      'blocksuite/affine/model',
+      'blocksuite/affine/shared',
       'blocksuite/framework/global',
       'blocksuite/framework/std',
       'blocksuite/framework/store',
@@ -1475,6 +1489,7 @@ export type PackageName =
   | '@blocksuite/data-view'
   | '@blocksuite/affine-ext-loader'
   | '@blocksuite/affine-foundation'
+  | '@blocksuite/affine-fragment-adapter-panel'
   | '@blocksuite/affine-fragment-doc-title'
   | '@blocksuite/affine-fragment-frame-panel'
   | '@blocksuite/affine-fragment-outline'

@@ -934,12 +934,22 @@ test('should be able to transcript', async t => {
 
   const { id: workspaceId } = await createWorkspace(app);
 
-  Sinon.stub(app.get(GeminiProvider), 'structure').resolves(
-    '[{"a":"A","s":30,"e":45,"t":"Hello, everyone."},{"a":"B","s":46,"e":70,"t":"Hi, thank you for joining the meeting today."}]'
-  );
-  Sinon.stub(app.get(GeminiProvider), 'text').resolves(
-    '[{"a":"A","s":30,"e":45,"t":"Hello, everyone."},{"a":"B","s":46,"e":70,"t":"Hi, thank you for joining the meeting today."}]'
-  );
+  for (const [provider, func] of [
+    [GeminiProvider, 'text'],
+    [GeminiProvider, 'structure'],
+  ] as const) {
+    Sinon.stub(app.get(provider), func).resolves(
+      JSON.stringify([
+        { a: 'A', s: 30, e: 45, t: 'Hello, everyone.' },
+        {
+          a: 'B',
+          s: 46,
+          e: 70,
+          t: 'Hi, thank you for joining the meeting today.',
+        },
+      ])
+    );
+  }
 
   {
     const job = await submitAudioTranscription(app, workspaceId, '1', '1.mp3', [

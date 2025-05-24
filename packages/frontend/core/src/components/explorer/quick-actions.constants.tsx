@@ -3,7 +3,9 @@ import type { I18nString } from '@affine/i18n';
 import {
   type QuickActionProps,
   QuickDelete,
+  QuickDeletePermanently,
   QuickFavorite,
+  QuickRestore,
   QuickSelect,
   QuickSplit,
   QuickTab,
@@ -46,6 +48,16 @@ const QUICK_ACTION_MAP: Record<QuickActionKey, QuickActionItem> = {
   quickSelect: {
     name: 'com.affine.all-docs.quick-action.select',
     Component: QuickSelect,
+  },
+  quickDeletePermanently: {
+    name: 'com.affine.all-docs.quick-action.delete-permanently',
+    Component: QuickDeletePermanently,
+    disabled: true, // can only be controlled in code
+  },
+  quickRestore: {
+    name: 'com.affine.all-docs.quick-action.restore',
+    Component: QuickRestore,
+    disabled: true, // can only be controlled in code
   },
 };
 export const quickActions = Object.entries(QUICK_ACTION_MAP).map(

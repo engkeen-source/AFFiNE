@@ -41,6 +41,7 @@ export class DocEventsListener {
   @OnEvent('user.deleted')
   async clearUserWorkspaces(payload: Events['user.deleted']) {
     for (const workspace of payload.ownedWorkspaces) {
+      await this.models.workspace.delete(workspace);
       await this.workspace.deleteSpace(workspace);
     }
   }

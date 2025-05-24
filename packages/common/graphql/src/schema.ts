@@ -671,6 +671,7 @@ export type ErrorDataUnion =
   | InvalidLicenseToActivateDataType
   | InvalidLicenseUpdateParamsDataType
   | InvalidOauthCallbackCodeDataType
+  | InvalidOauthResponseDataType
   | InvalidPasswordLengthDataType
   | InvalidRuntimeConfigTypeDataType
   | InvalidSearchProviderRequestDataType
@@ -706,6 +707,7 @@ export enum ErrorNames {
   BAD_REQUEST = 'BAD_REQUEST',
   BLOB_NOT_FOUND = 'BLOB_NOT_FOUND',
   BLOB_QUOTA_EXCEEDED = 'BLOB_QUOTA_EXCEEDED',
+  CANNOT_DELETE_ACCOUNT_WITH_OWNED_TEAM_WORKSPACE = 'CANNOT_DELETE_ACCOUNT_WITH_OWNED_TEAM_WORKSPACE',
   CANNOT_DELETE_ALL_ADMIN_ACCOUNT = 'CANNOT_DELETE_ALL_ADMIN_ACCOUNT',
   CANNOT_DELETE_OWN_ACCOUNT = 'CANNOT_DELETE_OWN_ACCOUNT',
   CANT_UPDATE_ONETIME_PAYMENT_SUBSCRIPTION = 'CANT_UPDATE_ONETIME_PAYMENT_SUBSCRIPTION',
@@ -772,6 +774,7 @@ export enum ErrorNames {
   INVALID_LICENSE_UPDATE_PARAMS = 'INVALID_LICENSE_UPDATE_PARAMS',
   INVALID_OAUTH_CALLBACK_CODE = 'INVALID_OAUTH_CALLBACK_CODE',
   INVALID_OAUTH_CALLBACK_STATE = 'INVALID_OAUTH_CALLBACK_STATE',
+  INVALID_OAUTH_RESPONSE = 'INVALID_OAUTH_RESPONSE',
   INVALID_PASSWORD_LENGTH = 'INVALID_PASSWORD_LENGTH',
   INVALID_RUNTIME_CONFIG_TYPE = 'INVALID_RUNTIME_CONFIG_TYPE',
   INVALID_SEARCH_PROVIDER_REQUEST = 'INVALID_SEARCH_PROVIDER_REQUEST',
@@ -932,6 +935,11 @@ export interface InvalidOauthCallbackCodeDataType {
   __typename?: 'InvalidOauthCallbackCodeDataType';
   body: Scalars['String']['output'];
   status: Scalars['Int']['output'];
+}
+
+export interface InvalidOauthResponseDataType {
+  __typename?: 'InvalidOauthResponseDataType';
+  reason: Scalars['String']['output'];
 }
 
 export interface InvalidPasswordLengthDataType {
@@ -1774,6 +1782,7 @@ export interface NotificationWorkspaceType {
 }
 
 export enum OAuthProviderType {
+  Apple = 'Apple',
   GitHub = 'GitHub',
   Google = 'Google',
   OIDC = 'OIDC',

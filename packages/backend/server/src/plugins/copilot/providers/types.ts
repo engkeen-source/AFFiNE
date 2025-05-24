@@ -1,6 +1,8 @@
 import { AiPromptRole } from '@prisma/client';
 import { z } from 'zod';
 
+// ========== provider ==========
+
 export enum CopilotProviderType {
   Anthropic = 'anthropic',
   FAL = 'fal',
@@ -12,6 +14,8 @@ export enum CopilotProviderType {
 export const CopilotProviderSchema = z.object({
   type: z.nativeEnum(CopilotProviderType),
 });
+
+// ========== prompt ==========
 
 export const PromptConfigStrictSchema = z.object({
   tools: z.enum(['webSearch']).array().nullable().optional(),
@@ -41,23 +45,27 @@ export const PromptConfigSchema =
 
 export type PromptConfig = z.infer<typeof PromptConfigSchema>;
 
+// ========== message ==========
+
+export const EmbeddingMessage = z.array(z.string().trim().min(1)).min(1);
+
 export const ChatMessageRole = Object.values(AiPromptRole) as [
   'system',
   'assistant',
   'user',
 ];
 
+export const ChatMessageAttachment = z.union([
+  z.string().url(),
+  z.object({
+    attachment: z.string(),
+    mimeType: z.string(),
+  }),
+]);
+
 export const PureMessageSchema = z.object({
   content: z.string(),
-  attachments: z
-    .array(
-      z.union([
-        z.string(),
-        z.object({ attachment: z.string(), mimeType: z.string() }),
-      ])
-    )
-    .optional()
-    .nullable(),
+  attachments: z.array(ChatMessageAttachment).optional().nullable(),
   params: z.record(z.any()).optional().nullable(),
 });
 
@@ -66,6 +74,8 @@ export const PromptMessageSchema = PureMessageSchema.extend({
 }).strict();
 export type PromptMessage = z.infer<typeof PromptMessageSchema>;
 export type PromptParams = NonNullable<PromptMessage['params']>;
+
+// ========== options ==========
 
 const CopilotProviderOptionsSchema = z.object({
   signal: z.instanceof(AbortSignal).optional(),

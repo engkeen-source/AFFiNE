@@ -2,12 +2,14 @@ import {
   Checkbox,
   DragHandle as DragHandleIcon,
   Skeleton,
+  Tooltip,
   useDraggable,
 } from '@affine/component';
 import { DocsService } from '@affine/core/modules/doc';
 import { DocDisplayMetaService } from '@affine/core/modules/doc-display-meta';
 import { WorkbenchLink } from '@affine/core/modules/workbench';
 import type { AffineDNDData } from '@affine/core/types/dnd';
+import { useI18n } from '@affine/i18n';
 import {
   AutoTidyUpIcon,
   PropertyIcon,
@@ -307,6 +309,7 @@ const listMoreMenuContentOptions = {
   alignOffset: -4,
 } as const;
 export const ListViewDoc = ({ docId }: DocListItemProps) => {
+  const t = useI18n();
   const docsService = useService(DocsService);
   const doc = useLiveData(docsService.list.doc$(docId));
   const [previewSkeletonWidth] = useState(
@@ -337,7 +340,11 @@ export const ListViewDoc = ({ docId }: DocListItemProps) => {
       <div className={styles.listSpace} />
       <ListViewProperties docId={docId} />
       {quickActions.map(action => {
-        return <action.Component key={action.key} doc={doc} />;
+        return (
+          <Tooltip key={action.key} content={t.t(action.name)}>
+            <action.Component doc={doc} />
+          </Tooltip>
+        );
       })}
       <MoreMenuButton
         docId={docId}
@@ -360,6 +367,7 @@ const randomPreviewSkeleton = () => {
   }));
 };
 export const CardViewDoc = ({ docId }: DocListItemProps) => {
+  const t = useI18n();
   const contextValue = useContext(DocExplorerContext);
   const selectMode = useLiveData(contextValue.selectMode$);
   const docsService = useService(DocsService);
@@ -380,7 +388,11 @@ export const CardViewDoc = ({ docId }: DocListItemProps) => {
           data-testid="doc-list-item-title"
         />
         {quickActions.map(action => {
-          return <action.Component size="16" key={action.key} doc={doc} />;
+          return (
+            <Tooltip key={action.key} content={t.t(action.name)}>
+              <action.Component size="16" doc={doc} />
+            </Tooltip>
+          );
         })}
         {selectMode ? (
           <Select id={docId} className={styles.cardViewCheckbox} />

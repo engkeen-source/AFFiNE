@@ -484,4 +484,31 @@ test.describe('AIBasic/Chat', () => {
       },
     ]);
   });
+
+  test('should support chat with ask ai input in edgeless mode when nothing selected', async ({
+    loggedInPage: page,
+    utils,
+  }) => {
+    await utils.chatPanel.closeChatPanel(page);
+    await utils.editor.switchToEdgelessMode(page);
+    await utils.editor.removeAll(page);
+
+    await page.mouse.move(300, 300);
+    await page.mouse.down({ button: 'right' });
+    await page.mouse.move(350, 350);
+    await page.mouse.up({ button: 'right' });
+
+    await page.keyboard.type('Who are you?');
+    await page.keyboard.press('Enter');
+    await utils.chatPanel.waitForHistory(page, [
+      {
+        role: 'user',
+        content: 'Who are you?',
+      },
+      {
+        role: 'assistant',
+        status: 'success',
+      },
+    ]);
+  });
 });

@@ -191,6 +191,10 @@ export class IndexerService {
           },
         },
       });
+      if (result.nextCursor && result.nextCursor === cursor) {
+        // NOTE(@fengmk2): avoid infinite loop bug in manticoresearch
+        break;
+      }
       docIds.push(...result.nodes.map(node => node.fields.docId[0] as string));
       cursor = result.nextCursor;
       this.logger.debug(

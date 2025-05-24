@@ -1,4 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
 
 import {
   Config,
@@ -14,10 +15,13 @@ import {
   CopilotProviderModel,
   CopilotProviderType,
   CopilotStructuredOptions,
+  EmbeddingMessage,
   ModelCapability,
   ModelConditions,
   ModelFullConditions,
+  ModelInputType,
   type PromptMessage,
+  PromptMessageSchema,
 } from './types';
 
 @Injectable()
@@ -60,7 +64,8 @@ export abstract class CopilotProvider<C = any> {
     const { modelId, outputType, inputTypes } = cond;
     const matcher = (cap: ModelCapability) =>
       (!outputType || cap.output.includes(outputType)) &&
-      (!inputTypes || inputTypes.every(type => cap.input.includes(type)));
+      (!inputTypes?.length ||
+        inputTypes.every(type => cap.input.includes(type)));
 
     if (modelId) {
       return this.models.find(
@@ -91,6 +96,65 @@ export abstract class CopilotProvider<C = any> {
           ? `No model supports ${outputType} output with ${inputTypes ?? '<any>'} input for provider ${this.type}`
           : 'Output type is required when modelId is not provided'
     );
+  }
+
+  private handleZodError(ret: z.SafeParseReturnType<any, any>) {
+    if (ret.success) return;
+    const issues = ret.error.issues.map(i => {
+      const path =
+        'root' +
+        (i.path.length
+          ? `.${i.path.map(seg => (typeof seg === 'number' ? `[${seg}]` : `.${seg}`)).join('')}`
+          : '');
+      return `${i.message}${path}`;
+    });
+    throw new CopilotPromptInvalid(issues.join('; '));
+  }
+
+  protected async checkParams({
+    cond,
+    messages,
+    embeddings,
+    options = {},
+  }: {
+    cond: ModelFullConditions;
+    messages?: PromptMessage[];
+    embeddings?: string[];
+    options?: CopilotChatOptions;
+  }) {
+    const model = this.selectModel(cond);
+    const multimodal = model.capabilities.some(c =>
+      [ModelInputType.Image, ModelInputType.Audio].some(t =>
+        c.input.includes(t)
+      )
+    );
+
+    if (messages) {
+      const { requireContent = true, requireAttachment = false } = options;
+
+      const MessageSchema = z
+        .array(
+          PromptMessageSchema.extend({
+            content: requireContent
+              ? z.string().trim().min(1)
+              : z.string().optional().nullable(),
+          })
+            .passthrough()
+            .catchall(z.union([z.string(), z.number(), z.date(), z.null()]))
+            .refine(
+              m =>
+                !(multimodal && requireAttachment && m.role === 'user') ||
+                (m.attachments ? m.attachments.length > 0 : true),
+              { message: 'attachments required in multimodal mode' }
+            )
+        )
+        .optional();
+
+      this.handleZodError(MessageSchema.safeParse(messages));
+    }
+    if (embeddings) {
+      this.handleZodError(EmbeddingMessage.safeParse(embeddings));
+    }
   }
 
   abstract text(

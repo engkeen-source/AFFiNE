@@ -1,5 +1,4 @@
 import { LiveData } from '@toeverything/infra';
-import { uniq } from 'lodash-es';
 import { createContext } from 'react';
 
 import type { ExplorerDisplayPreference } from './types';
@@ -42,10 +41,6 @@ export const createDocExplorerContext = (
   const displayPreference$ = new LiveData<ExplorerDisplayPreference>({
     ...DefaultDisplayPreference,
     ...initialState,
-    displayProperties: uniq([
-      ...(DefaultDisplayPreference.displayProperties ?? []),
-      ...(initialState?.displayProperties ?? []),
-    ]),
   });
   return {
     groups$: new LiveData<Array<{ key: string; items: string[] }>>([]),
@@ -92,6 +87,12 @@ export const createDocExplorerContext = (
     ),
     showDragHandle$: displayPreference$.selector(
       displayPreference => displayPreference.showDragHandle
+    ),
+    quickDeletePermanently$: displayPreference$.selector(
+      displayPreference => displayPreference.quickDeletePermanently
+    ),
+    quickRestore$: displayPreference$.selector(
+      displayPreference => displayPreference.quickRestore
     ),
   } satisfies DocExplorerContextType;
 };

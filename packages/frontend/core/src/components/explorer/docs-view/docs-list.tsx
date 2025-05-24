@@ -69,15 +69,15 @@ const GroupHeader = memo(function GroupHeader({
   return header;
 });
 
-const calcCardHeightById = (id: string) => {
+const calcCardHeightById = (id: string, base = 250, scale = 10) => {
   if (!id) {
-    return 250;
+    return base;
   }
   const max = 5;
   const min = 1;
   const code = id.charCodeAt(0);
   const value = Math.floor((code % (max - min)) + min);
-  return 250 + value * 10;
+  return base + value * scale;
 };
 
 export const DocListItemComponent = memo(function DocListItemComponent({
@@ -93,9 +93,20 @@ export const DocListItemComponent = memo(function DocListItemComponent({
 export const DocsExplorer = ({
   className,
   disableMultiDelete,
+  masonryItemWidthMin,
+  heightBase,
+  heightScale,
+  onRestore,
+  onDelete,
 }: {
   className?: string;
   disableMultiDelete?: boolean;
+  masonryItemWidthMin?: number;
+  heightBase?: number;
+  heightScale?: number;
+  onRestore?: (ids: string[]) => void;
+  /** Override the default delete action */
+  onDelete?: (ids: string[]) => void;
 }) => {
   const t = useI18n();
   const contextValue = useContext(DocExplorerContext);
@@ -126,7 +137,7 @@ export const DocsExplorer = ({
                 ? 42
                 : view === 'grid'
                   ? 280
-                  : calcCardHeightById(docId),
+                  : calcCardHeightById(docId, heightBase, heightScale),
             'data-view': view,
             className: styles.docItem,
           };
@@ -134,7 +145,7 @@ export const DocsExplorer = ({
       } satisfies MasonryGroup;
     });
     return items;
-  }, [groupBy, groups, view]);
+  }, [groupBy, groups, heightBase, heightScale, view]);
 
   const handleCloseFloatingToolbar = useCallback(() => {
     contextValue.selectMode$?.next(false);
@@ -147,6 +158,11 @@ export const DocsExplorer = ({
       return;
     }
     if (selectedDocIds.length === 0) {
+      return;
+    }
+    if (onDelete) {
+      onDelete(contextValue.selectedDocIds$.value);
+      handleCloseFloatingToolbar();
       return;
     }
 
@@ -177,9 +193,19 @@ export const DocsExplorer = ({
     disableMultiDelete,
     docsService.list,
     handleCloseFloatingToolbar,
+    onDelete,
     openConfirmModal,
     selectedDocIds.length,
     t,
+  ]);
+  const handleMultiRestore = useCallback(() => {
+    const selectedDocIds = contextValue.selectedDocIds$.value;
+    onRestore?.(selectedDocIds);
+    handleCloseFloatingToolbar();
+  }, [
+    contextValue.selectedDocIds$.value,
+    handleCloseFloatingToolbar,
+    onRestore,
   ]);
 
   useEffect(() => {
@@ -206,7 +232,7 @@ export const DocsExplorer = ({
         groupsGap={12}
         groupHeaderGapWithItems={12}
         columns={view === 'list' ? 1 : undefined}
-        itemWidthMin={220}
+        itemWidthMin={masonryItemWidthMin ?? 220}
         preloadHeight={100}
         itemWidth={'stretch'}
         virtualScroll
@@ -216,10 +242,11 @@ export const DocsExplorer = ({
           []
         )}
       />
-      {!disableMultiDelete ? (
+      {!disableMultiDelete || onRestore ? (
         <ListFloatingToolbar
           open={!!selectMode}
-          onDelete={handleMultiDelete}
+          onDelete={disableMultiDelete ? undefined : handleMultiDelete}
+          onRestore={onRestore ? handleMultiRestore : undefined}
           onClose={handleCloseFloatingToolbar}
           content={
             <Trans

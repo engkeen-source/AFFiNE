@@ -123,6 +123,7 @@ export class ChatPrompt {
     return {
       'affine::date': new Date().toLocaleDateString(),
       'affine::language': params.language || 'same language as the user query',
+      'affine::timezone': params.timezone || 'no preference',
     };
   }
 
